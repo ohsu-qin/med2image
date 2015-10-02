@@ -1,6 +1,7 @@
 import os
+
 import re
-from setuptools import (setup, find_packages)
+from setuptools import setup
 
 def version():
     """
@@ -26,7 +27,8 @@ setup(
     platforms = 'Any',
     license = 'MIT',
     keywords = 'Medical Imaging DICOM NiFTI JPEG',
-    packages = find_packages(),
+    packages = ['med2image'],
+    package_dir = dict(med2image='..'),
     scripts = ['med2image.py'],
     url = 'https://github.com/FNNDSC/med2image',
     description = 'Converts medical images to more displayable formats',
