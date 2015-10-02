@@ -1,0 +1,11 @@
+**~
+dist
+**.egg-info/
+.DS_Store
+.idea
+.project
+.pypirc
+.*/
+*.pdf
+*.pyc
+*.tar*
