@@ -5,8 +5,8 @@ import  os
 import  time
 import  inspect
 import  types
-import  dgmsocket as dgm
-from    _common._colors import Colors
+from    .                import dgmsocket   as dgm
+from    ._common._colors import Colors
 
 class Message:
     '''

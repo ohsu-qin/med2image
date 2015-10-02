@@ -1,15 +1,17 @@
 import os
 
 import re
-from setuptools import setup
+from setuptools import (find_packages, setup)
 
-def version():
+
+def version(package):
     """
     Return package version as listed in the `__init.py__` `__version__`
     variable.
     """
-    init = open(os.path.join(os.getcwd(), '__init__.py')).read()
-    return re.search("__version__ = ['\"]([^'\"]+)['\"]", init).group(1)
+    init_py = open(os.path.join(package, '__init__.py')).read()
+    return re.search("__version__ = ['\"]([^'\"]+)['\"]", init_py).group(1)
+
 
 
 def requires():
@@ -22,14 +24,13 @@ def requires():
 
 setup(
     name = 'med2image',
-    version = version(),
+    version = version('med2image'),
     author = 'Fetal Neonatal Neuroimaging and Developmental Science Center',
     platforms = 'Any',
     license = 'MIT',
     keywords = 'Medical Imaging DICOM NiFTI JPEG',
-    packages = ['med2image'],
-    package_dir = dict(med2image='..'),
-    scripts = ['med2image.py'],
+    packages = find_packages(),
+    scripts = ['bin/med2image'],
     url = 'https://github.com/FNNDSC/med2image',
     description = 'Converts medical images to more displayable formats',
     classifiers = [
