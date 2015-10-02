@@ -18,7 +18,6 @@
 # System imports
 import     os
 import     sys
-import     getpass
 import     argparse
 import     time
 import     glob
@@ -188,6 +187,7 @@ class med2image(object):
         '''
         The main 'engine' of the class.
         '''
+        raise NotImplementedError("Subclass responsibility")
 
     def echo(self, *args):
         self._b_echoCmd         = True
