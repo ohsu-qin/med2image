@@ -21,21 +21,27 @@ from       ._common          import     systemMisc     as misc
 from       ._common._colors  import     Colors
 
 
-def run(args):
-    """
+class ArgumentError(Exception):
+    '''Method parameter is missing or invalid.'''
+    pass
+
+def run(inputFile, **kwargs):
+    '''
     Convert the image as specified by the given arguments.
     
-    :param args: the command line arguments
-    """
+    :param inputFile: the location of the image file to convert
+    :param kwargs: the keyword options
+    :return: the converted output file location
+    '''
     str_outputFileStem, str_outputFileExtension     = os.path.splitext(args.outputFileStem)
-    if len(str_outputFileExtension):
+    if str_outputFileExtension:
         str_outputFileExtension = str_outputFileExtension.split('.')[1]
     str_inputFileStem,  str_inputFileExtension      = os.path.splitext(args.inputFile)
     
-    if not len(args.outputFileType) and len(str_outputFileExtension):
+    if not args.outputFileType and str_outputFileExtension:
         args.outputFileType = str_outputFileExtension
 
-    if len(str_outputFileExtension):
+    if str_outputFileExtension:
         args.outputFileStem = str_outputFileStem
 
     if str_inputFileExtension in ['.nii', '.gz']:
@@ -67,28 +73,12 @@ def run(args):
     
 
 class med2image(object):
-    """
+    '''
         med2image accepts as input certain medical image formatted data
         and converts each (or specified) slice of this data to a graphical
         display format such as png or jpg.
 
-    """
-
-    _dictErr = {
-        'inputFileFail'   : {
-            'action'        : 'trying to read input file, ',
-            'error'         : 'could not access/read file -- does it exist? Do you have permission?',
-            'exitCode'      : 10},
-        'emailFail'   : {
-            'action'        : 'attempting to send notification email, ',
-            'error'         : 'sending failed. Perhaps host is not email configured?',
-            'exitCode'      : 20},
-        'dcmInsertionFail': {
-            'action'        : 'attempting insert DICOM into volume structure, ',
-            'error'         : 'a dimension mismatch occurred. This DICOM file is of different image size to the rest.',
-            'exitCode'      : 20
-            }
-    }
+    '''
         
     def log(self, *args):
         '''
@@ -97,7 +87,7 @@ class med2image(object):
         Caller can further manipulate the log object with object-specific
         calls.
         '''
-        if len(args):
+        if args:
             self._log = args[0]
         else:
             return self._log
@@ -106,7 +96,7 @@ class med2image(object):
         '''
         get/set the descriptive name text of this object.
         '''
-        if len(args):
+        if args:
             self.__name = args[0]
         else:
             return self.__name
@@ -115,7 +105,7 @@ class med2image(object):
         '''
         Get / set internal object description.
         '''
-        if len(args):
+        if args:
             self._str_desc = args[0]
         else:
             return self._str_desc
@@ -192,24 +182,24 @@ class med2image(object):
 
         if self._str_frameToConvert.lower() == 'm':
             self._b_convertMiddleFrame = True
-        elif len(self._str_frameToConvert):
+        elif self._str_frameToConvert:
             self._frameToConvert = int(self._str_frameToConvert)
 
         if self._str_sliceToConvert.lower() == 'm':
             self._b_convertMiddleSlice = True
-        elif len(self._str_sliceToConvert):
+        elif self._str_sliceToConvert:
             self._sliceToConvert = int(self._str_sliceToConvert)
 
         self._str_inputDir               = os.path.dirname(self._str_inputFile)
-        if not len(self._str_inputDir): self._str_inputDir = '.'
+        if not self._str_inputDir: self._str_inputDir = '.'
         str_fileName, str_fileExtension  = os.path.splitext(self._str_outputFileStem)
-        if len(self._str_outputFileType):
+        if self._str_outputFileType:
             str_fileExtension            = '.%s' % self._str_outputFileType
 
-        if len(str_fileExtension) and not len(self._str_outputFileType):
+        if str_fileExtension and not self._str_outputFileType:
             self._str_outputFileType     = str_fileExtension
 
-        if not len(self._str_outputFileType) and not len(str_fileExtension):
+        if not self._str_outputFileType and not str_fileExtension:
             self._str_outputFileType     = '.png'
 
     def run(self):
@@ -217,41 +207,6 @@ class med2image(object):
         The main 'engine' of the class.
         '''
         raise NotImplementedError("Subclass responsibility")
-
-    def echo(self, *args):
-        self._b_echoCmd         = True
-        if len(args):
-            self._b_echoCmd     = args[0]
-
-    def echoStdOut(self, *args):
-        self._b_echoStdOut      = True
-        if len(args):
-            self._b_echoStdOut  = args[0]
-
-    def stdout(self):
-        return self._str_stdout
-
-    def stderr(self):
-        return self._str_stderr
-
-    def exitCode(self):
-        return self._exitCode
-
-    def echoStdErr(self, *args):
-        self._b_echoStdErr      = True
-        if len(args):
-            self._b_echoStdErr  = args[0]
-
-    def dontRun(self, *args):
-        self._b_runCmd          = False
-        if len(args):
-            self._b_runCmd      = args[0]
-
-    def workingDir(self, *args):
-        if len(args):
-            self._str_workingDir = args[0]
-        else:
-            return self._str_workingDir
 
     def dim_sliceSave(self, **kwargs):
         index   = 0
@@ -343,7 +298,7 @@ class med2image_dcm(med2image):
         med2image.__init__(self, **kwargs)
 
         self.l_dcmFileNames = sorted(glob.glob('%s/*.dcm' % self._str_inputDir))
-        self.slices         = len(self.l_dcmFileNames)
+        self.slices         = self.l_dcmFileNames
 
         if self._b_convertMiddleSlice:
             self._sliceToConvert = int(self.slices/2)
@@ -384,7 +339,7 @@ class med2image_dcm(med2image):
                 else:
                     str_fileComponent = eval('self._dcm.%s' % key)
                     str_fileComponent = med2image.urlify(str_fileComponent)
-                if not len(self._str_outputFileStem):
+                if not self._str_outputFileStem:
                     self._str_outputFileStem = str_fileComponent
                 else:
                     self._str_outputFileStem = self._str_outputFileStem + '-' + str_fileComponent
