@@ -29,51 +29,40 @@ def main():
                                                  " medical image file to a more"
                                                  " conventional graphical format.")
     parser.add_argument("-i", "--inputFile",
-                        help="input file",
-                        dest='inputFile')
+                        help="input file")
     parser.add_argument("-o", "--outputFileStem",
                         help="output file",
-                        default="output.jpg",
-                        dest='outputFileStem')
+                        default="output.jpg")
     parser.add_argument("-d", "--outputDir",
                         help="output image directory",
-                        dest='outputDir',
                         default='.')
     parser.add_argument("-t", "--outputFileType",
                         help="output image type",
-                        dest='outputFileType',
                         default='')
     parser.add_argument("-s", "--sliceToConvert",
                         help="slice to convert (for 3D data)",
-                        dest='sliceToConvert',
                         default='-1')
     parser.add_argument("-f", "--frameToConvert",
                         help="frame to convert (for 4D data)",
-                        dest='frameToConvert',
                         default='-1')
     parser.add_argument("--printElapsedTime",
                         help="print program run time",
-                        dest='printElapsedTime',
                         action='store_true',
                         default=False)
     parser.add_argument('-r', '--reslice',
                         help="save images along i,j,k directions -- 3D input only",
-                        dest='reslice',
                         action='store_true',
                         default=False)
     parser.add_argument('--showSlices',
                         help="show slices that are converted",
-                        dest='showSlices',
                         action='store_true',
                         default='False')
     parser.add_argument("-x", "--man",
                         help="man",
-                        dest='man',
                         action='store_true',
                         default=False)
     parser.add_argument("-y", "--synopsis",
                         help="short synopsis",
-                        dest='synopsis',
                         action='store_true',
                         default=False)
     args = parser.parse_args()
