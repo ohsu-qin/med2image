@@ -13,7 +13,6 @@ def version(package):
     return re.search("__version__ = ['\"]([^'\"]+)['\"]", init_py).group(1)
 
 
-
 def requires():
     """
     @return: the ``requirements.txt`` package specifications

@@ -1,227 +1,80 @@
 #!/usr/bin/env python
-#
-# NAME
-#
-#        med2image
-#
-# DESCRIPTION
-#
-#        'med2image' converts from medical image data files to
-#        display-friendly formats (like png and jpg).
-#
-# HISTORY
-#
-# 10 October 2015
-# o Refactor into an installable module.
-# 23 February 2015
-# o Initial design and coding.
-#
-import     os
-import     sys
-import     argparse
-import     med2image
-from       med2image._common import     systemMisc     as misc
-
+import os
+import sys
+import argparse
+import med2image
+from med2image._common import systemMisc as misc
 
 
 def main():
-    parser = argparse.ArgumentParser(description="med2view converts an input"
-                                                 " medical image file to a more"
-                                                 " conventional graphical format.")
-    parser.add_argument("-i", "--inputFile",
-                        help="input file")
-    parser.add_argument("-o", "--outputFileStem",
-                        help="output file",
-                        default="output.jpg")
-    parser.add_argument("-d", "--outputDir",
-                        help="output image directory",
-                        default='.')
-    parser.add_argument("-t", "--outputFileType",
-                        help="output image type",
-                        default='')
-    parser.add_argument("-s", "--sliceToConvert",
-                        help="slice to convert (for 3D data)",
-                        default='-1')
-    parser.add_argument("-f", "--frameToConvert",
-                        help="frame to convert (for 4D data)",
-                        default='-1')
-    parser.add_argument("--printElapsedTime",
-                        help="print program run time",
-                        action='store_true',
-                        default=False)
-    parser.add_argument('-r', '--reslice',
-                        help="save images along i,j,k directions -- 3D input only",
-                        action='store_true',
-                        default=False)
-    parser.add_argument('--showSlices',
-                        help="show slices that are converted",
-                        action='store_true',
-                        default='False')
-    parser.add_argument("-x", "--man",
-                        help="man",
-                        action='store_true',
-                        default=False)
-    parser.add_argument("-y", "--synopsis",
-                        help="short synopsis",
-                        action='store_true',
-                        default=False)
-    args = parser.parse_args()
-
-    if args.man or args.synopsis:
-        if args.man:
-            str_help     = synopsis(False)
+    # The required input file argument.
+    inputLocation, opts = _parse_arguments()
+    manOpt = opts.pop('man', None)
+    synopsisOpt = opts.pop('synopsis', None)
+    if manOpt or synopsisOpt:
+        if manOpt:
+            str_help = synopsis(False)
         else:
-            str_help     = synopsis(True)
+            str_help = synopsis(True)
         print(str_help)
         sys.exit(0)
 
     # Convert the image.
+    verbose = opts.pop('verbose', None)
     misc.tic()
-    med2image.run(args)
-
-    if args.printElapsedTime: print("Elapsed time = %f seconds" % misc.toc())
+    med2image.run(inputLocation, **opts)
+    if verbose:
+        print("Elapsed time = %f seconds" % misc.toc())
     sys.exit(0)
 
 
-def synopsis(ab_shortOnly = False):
-    scriptName = os.path.basename(sys.argv[0])
-    shortSynopsis =  '''
-    NAME
+EPILOG = """
+If an 'm' is specified for the slice or frame to convert, then only
+the middle slice or frame in the input volume is converted.
 
-	    med2image.py - convert medical images to jpg/png/etc.
+If the input location can be a file or a directory. Currently, only
+directories with DICOM files are supported. If the location is a file
+without a file extension, then the <inputFileType> must be specified. 
 
-    SYNOPSIS
+For DICOM data, the <outputFileStem> can include DICOM tag
+substitutions in the form %(<tag>), e.g.:
 
-            %s                                   \\
-                     -i|--input <inputFile>                \\
-                    [-d|--outputDir <outputDir>]           \\
-                     -o|--output <outputFileStem>          \\
-                    [-t|--outputFileType <outputFileType>] \\
-                    [-s|--sliceToConvert <sliceToConvert>] \\
-                    [-f|--frameToConvert <frameToConvert>] \\
-                    [--showSlices]                         \\
-                    [-x|--man]				   \\
-		    [-y|--synopsis]
+    -o '%(PatientID)-%(ProtocolName)'
 
-    BRIEF EXAMPLE
+See https://github.com/FNNDSC/med2image for more information.
+"""
 
-	    med2image.py -i slice.dcm -o slice.jpg
+def _parse_arguments():
+    parser = argparse.ArgumentParser(
+        description="Converts a medical image file to a conventional"
+                    " display format such as JPEG.",
+        epilog = EPILOG,
+        formatter_class=argparse.RawDescriptionHelpFormatter
+    )
+    
+    parser.add_argument("input", help="input file or directory")
+    parser.add_argument("-o", "--outputFileStem", metavar="NAME",
+                        help="output file name")
+    parser.add_argument("-d", "--destination", metavar="DIR",
+                        help="output image directory"
+                             " (default current directory)")
+    parser.add_argument("-i", "--inputFileType", metavar="TYPE",
+                        help="input image type ('dcm' or 'nii')")
+    parser.add_argument("-t", "--outputFileType", metavar="TYPE",
+                        help="output image type")
+    parser.add_argument("-s", "--sliceToConvert", metavar="SLICE",
+                        help="slice to convert (for 3D data)")
+    parser.add_argument("-f", "--frameToConvert", metavar="FRAME",
+                        help="frame to convert (for 4D data)")
+    parser.add_argument('-r', '--reslice',
+                        help="save images along i,j,k directions (3D data only)",
+                        action='store_true')
+    parser.add_argument("-v", "--verbose", help="print program run time",
+                        action='store_true')
+    args = vars(parser.parse_args())
 
-    ''' % scriptName
-
-    description =  '''
-    DESCRIPTION
-
-        `%s' converts input medical image formatted data to a more
-        display friendly format, such as jpg or png.
-
-        Currently understands NIfTI and DICOM input formats.
-
-    ARGS
-
-        -i|--inputFile <inputFile>
-        Input file to convert. Typically a DICOM file or a nifti volume.
-
-        [-d|--outputDir <outputDir>]
-        The directory to contain the converted output image files.
-
-        -o|--outputFileStem <outputFileStem>
-        The output file stem to store conversion. If this is specified
-        with an extension, this extension will be used to specify the
-        output file type.
-        
-        SPECIAL CASES:
-        For DICOM data, the <outputFileStem> can be set to the value of
-        an internal DICOM tag. The tag is specified by preceding the tag
-        name with a percent character '%%', so 
-        
-            -o %%ProtocolName
-            
-        will use the DICOM 'ProtocolName' to name the output file. Note
-        that special characters (like spaces) in the DICOM value are 
-        replaced by underscores '_'.
-        
-        Multiple tags can be specified, for example
-        
-            -o %%PatientName%%PatientID%%ProtocolName
-            
-        and the output filename will have each DICOM tag string as 
-        specified in order, connected with dashes.
-        
-        A special %%inputFile is available to specify the input file that
-        was read (without extension).
-
-        [-t|--outputFileType <outputFileType>]
-        The output file type. If different to <outputFileStem> extension,
-        will override extension in favour of <outputFileType>.
-
-        [-s|--sliceToConvert <sliceToConvert>]
-        In the case of volume files, the slice (z) index to convert. Ignored
-        for 2D input data. If a '-1' is sent, then convert *all* the slices.
-        If an 'm' is specified, only convert the middle slice in an input
-        volume.
-
-        [-f|--frameToConvert <sliceToConvert>]
-        In the case of 4D volume files, the volume (V) containing the
-        slice (z) index to convert. Ignored for 3D input data. If a '-1' is
-        sent, then convert *all* the frames. If an 'm' is specified, only
-        convert the middle frame in the 4D input stack.
-
-        [--showSlices]
-        If specified, render/show image slices as they are created.
-        
-        [--reslice]
-        For 3D data only. Assuming [i,j,k] coordinates, the default is to save
-        along the 'k' direction. By passing a --reslice image data in the 'i' and
-        'j' directions are also saved. Furthermore, the <outputDir> is subdivided into
-        'slice' (k), 'row' (i), and 'col' (j) subdirectories.
-
-        [-x|--man]
-        Show full help.
-
-        [-y|--synopsis]
-        Show brief help.
-
-    EXAMPLES
-
-    NIfTI
-
-    o Convert each slice in a NIfTI volume 'vol.nii' to a jpg called
-      'image-sliceXXX.jpg' and store results in a directory called 'out':
-
-    		med2image.py -i vol.nii -d out -o image.jpg -s -1
-
-    o Convert only the middle slice in an input volume and store in current
-      directory:
-
-    		med2image.py -i vol.nii -o image.jpg -s m
-
-    o Convert a specific slice, i.e. slice 20
-
-    		med2image.py -i vol.nii -o image.jpg -s 20
-
-    DICOM
-
-    o Simply convert a DICOM file called 'slice.dcm' to a jpg called 'slice.jpg':
-
-    		med2image.py -i slice.dcm -o slice.jpg
-
-    o Convert all DICOMs in a directory. Note that is assumes all DICOM files
-      in the directory containing the passed file belong to the same series.
-      Conversion will fail if multiple series are interspersed in the same dir.
-
-                med2image.py -i slice.dcm -o slice.jpg -s -1
-
-    GITHUB
-
-        o See https://github.com/FNNDSC/med2image for more help and source.
-
-
-    ''' % (scriptName)
-    if ab_shortOnly:
-        return shortSynopsis
-    else:
-        return shortSynopsis + description
+    nonempty_args = dict((k, v) for k, v in args.iteritems() if v != None)
+    return nonempty_args.pop('input', None), nonempty_args
 
 
 if __name__ == '__main__':
