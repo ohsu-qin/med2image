@@ -9,8 +9,7 @@ import re
 # System dependency imports
 import nibabel as nib
 import dicom
-import pylab
-import matplotlib.cm as cm
+from matplotlib import (image, cm)
 
 # Project specific imports
 from . import error
@@ -232,7 +231,7 @@ class med2image(object):
         '''
         if self._verbose:
             self._log('Output file: %s\n' % outputFile)
-        pylab.imsave(outputFile, self._2Dslice, cmap = cm.Greys_r)
+        image.imsave(outputFile, self._2Dslice, cmap = cm.Greys_r)
 
 
 class med2image_dcm(med2image):
