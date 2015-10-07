@@ -6,9 +6,11 @@
 
 ## Overview
 
-<tt>med2image</tt> is a simple Python utility that converts medical image formatted files to more visual friendly ones, such as <tt>png</tt> and <tt>jpg</tt>.
+<tt>med2image</tt> is a simple Python utility that converts medical image
+formatted files to more visual friendly ones, such as <tt>png</tt> and <tt>jpg</tt>.
 
-Currently, NIfTI and DICOM input formats are understood, while any graphical output type that is supported by <tt>matplotlib</tt> can be generated.
+Currently, NIfTI and DICOM input formats are understood, while any graphical
+output type that is supported by <tt>matplotlib</tt> can be generated.
 
 ## Dependencies
 Make sure that the following dependencies are installed on the host system:
@@ -19,12 +21,16 @@ Make sure that the following dependencies are installed on the host system:
 
 ### FNNDSC script checkout
 
-An alternate method of installing this script and <b>some</b> of its internal dependencies (<tt>error.py, dgmsocket.py, message.py</tt>) is to checkout the FNNDSC github scripts repository, https://github.com/FNNDSC/scripts.
+An alternate method of installing this script and <b>some</b> of its internal
+dependencies (<tt>error.py, dgmsocket.py, message.py</tt>) is to checkout the
+FNNDSC github scripts repository, https://github.com/FNNDSC/scripts.
 
 ## Command line arguments
 
-        -i|--inputFile <inputFile>
-        Input file to convert. Typically a DICOM file or a nifti volume.
+        inputLocation <path>
+        Input image file or directory. Typically a DICOM file or a
+        nifti volume. When used with the --sliceToConvert option,
+        the location is a directory containing DICOM files.
 
         [-d|--outputDir <outputDir>]
         The directory to contain the converted output image files.
@@ -52,7 +58,7 @@ An alternate method of installing this script and <b>some</b> of its internal de
         and the output filename will have each DICOM tag string as
         specified in order, connected with dashes.
 
-        A special %inputFile is available to specify the input file that
+        A special %inputLocation is available to specify the input file that
         was read (without extension).
 
         [-t|--outputFileType <outputFileType>]
@@ -61,45 +67,40 @@ An alternate method of installing this script and <b>some</b> of its internal de
 
         [-s|--sliceToConvert <sliceToConvert>]
         In the case of volume files, the slice (z) index to convert. Ignored
-        for 2D input data. If a '-1' is sent, then convert *all* the slices.
-        If an 'm' is specified, only convert the middle slice in an input
-        volume.
+        for 2D input data. If 'm' is specified, then only convert the middle
+        slice in an input volume. The default is to convert all slices.
         
         [-f|--frameToConvert <sliceToConvert>]
         In the case of 4D volume files, the volume (V) containing the
-        slice (z) index to convert. Ignored for 3D input data. If a '-1' is 
-        sent, then convert *all* the frames. If an 'm' is specified, only 
-        convert the middle frame in the 4D input stack.
-
-        [--showSlices]
-        If specified, render/show image slices as they are created.
+        slice (z) index to convert. Ignored for 2D or 3D input data. If 'm'
+        is specified, then only convert the middle frame in the 4D input
+        stack. The default is to convert all slices.
 
         [--reslice]
         For 3D data only. Assuming [i,j,k] coordinates, the default is to save
-        along the 'k' direction. By passing a --reslice image data in the 'i' and
-        'j' directions are also saved. Furthermore, the <outputDir> is subdivided into
-        'slice' (k), 'row' (i), and 'col' (j) subdirectories.
-
-        [-x|--man]
-        Show full help.
-
-        [-y|--synopsis]
-        Show brief help.
+        along the 'k' direction. By passing a --reslice image data in the 'i'
+        and 'j' directions are also saved. Furthermore, the <outputDir> is
+        subdivided into 'slice' (k), 'row' (i), and 'col' (j) subdirectories.
 
 ## NIfTI conversion 
-Both 3D and 4D NIfTI input data are understood. In the case of 4D NIfTI, a specific <b>frame</b> can be specified in conjunction with a specific <b>slice</b> index. In most cases, only a <b>slice</b> is required since most NIfTI data is 3D. Furthermore, all slices can be converted, or just the middle one.
+Both 3D and 4D NIfTI input data are understood. In the case of 4D NIfTI, a
+specific <b>frame</b> can be specified in conjunction with a specific
+<b>slice</b> index. In most cases, only a <b>slice</b> is required since most
+NIfTI data is 3D. Furthermore, all slices can be converted, or just the middle
+one.
 
 ### Examples
 ### All slices in a volume
-To convert <b>all</b> slices in an input NIfTI volume called <tt>vol.nii</tt>, to save the results in a directory called <tt>out</tt> and to use as output the file stem name <tt>image</tt>, do
+To convert <b>all</b> slices in an input NIfTI volume called <tt>vol.nii</tt>,
+to save the results in a directory called <tt>out</tt> and to use as output
+the file stem name <tt>image</tt>, do
 
- ```med2image.py -i vol.nii -d out -o image.jpg -s -1```
+ ```med2image.py -i vol.nii -d out -o image.jpg```
 
 or equivalently and more verbosely,
 
-    med2image.py --inputFile vol.nii     --outputDir out      \
-                 --outputFileStem image  --outputFileType jpg \
-                 --sliceToConvert -1
+    med2image.py --inputLocation vol.nii     --outputDir out      \
+                 --outputFileStem image  --outputFileType jpg
 
 This will create the following files in <tt>out</tt>
 
@@ -121,7 +122,9 @@ image-slice053.jpg
 ```
 
 ### Convert only a single slice
-Mostly, you'll probably only want to convert the "middle" slice in a volume (for example to generate a representative thumbnail of the volume). To do this, simply specify a <tt>m</tt> to <tt>--sliceToConvert</tt>
+Mostly, you'll probably only want to convert the "middle" slice in a volume
+(for example to generate a representative thumbnail of the volume). To do this,
+simply specify a <tt>m</tt> to <tt>--sliceToConvert</tt>
 
  ```med2image.py -i input.nii -o input.jpg -s m```
 
@@ -149,13 +152,18 @@ To convert all the DICOMS in a directory, simply specifiy a '-1' to the sliceInd
 
 ```med2image.py -i inputDir/slice.dcm -d outputDir -o slice.jpg -s -1```
 
-Note that this assumes all the DICOM files in the directory <tt>inputDir</tt> belong to the same series.
+Note that this assumes all the DICOM files in the directory <tt>inputDir</tt> belong
+to the same series.
 
 ## Multiple Direction Reslicing
-By default, only the slice (or slices) in the acquisition direction are converted. However, by passing a <tt>-r</tt> to the script, all dimensions are converted. Since the script does not know the anatomical orientation of the image, the directions are simply labeled <tt>x</tt>, <tt>y</tt>, and <tt>z</tt>.
+By default, only the slice (or slices) in the acquisition direction are converted.
+However, by passing a <tt>-r</tt> to the script, all dimensions are converted.
+Since the script does not know the anatomical orientation of the image, the directions
+are simply labeled <tt>x</tt>, <tt>y</tt>, and <tt>z</tt>.
 
-The <tt>z</tt> direction is the original acquistion (slice) direction, while <tt>x</tt> and <tt>y</tt> correspond to planes normal to the row and column directions.
+The <tt>z</tt> direction is the original acquistion (slice) direction, while
+<tt>x</tt> and <tt>y</tt> correspond to planes normal to the row and column directions.
 
-Converted images are stored in subdirectories labeled <tt>x</tt>, <tt>y</tt>, and <tt>z</tt>.
-
+Converted images are stored in subdirectories labeled <tt>x</tt>, <tt>y</tt>, and
+<tt>z</tt>.
 
